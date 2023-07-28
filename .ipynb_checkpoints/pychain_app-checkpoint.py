@@ -6,6 +6,7 @@ import datetime as datetime
 import pandas as pd
 import hashlib
 
+
 # Define a new Python data class named `Record`.
 # Add the `@dataclass` decorator immediately before the `Record` class definition.
 # Add attributes `sender` of type `str`, `receiver` of type `str`, and `amount` of type `float` to the `Record` class.
@@ -46,9 +47,60 @@ class Block:
 
         return sha.hexdigest()
     
-    # Step 3: Add Relevant User Inputs to the Streamlit Interface
+@dataclass
+class PyChain:
+    chain: List[Block]
+    difficulty: int = 4
+
+    def proof_of_work(self, block):
+
+        calculated_hash = block.hash_block()
+
+        num_of_zeros = "0" * self.difficulty
+
+        while not calculated_hash.startswith(num_of_zeros):
+
+            block.nonce += 1
+
+            calculated_hash = block.hash_block()
+
+        print("Wining Hash", calculated_hash)
+        return block
+
+    def add_block(self, candidate_block):
+        block = self.proof_of_work(candidate_block)
+        self.chain += [block]
+
+    def is_valid(self):
+        block_hash = self.chain[0].hash_block()
+
+        for block in self.chain[1:]:
+            if block_hash != block.prev_hash:
+                print("Blockchain is invalid!")
+                return False
+
+            block_hash = block.hash_block()
+
+        print("Blockchain is Valid")
+        return True
+
+################################################################################
+# Streamlit Code
+
+# Adds the cache decorator for Streamlit
+
+
+@st.cache(allow_output_mutation=True)
+def setup():
+    print("Initializing Chain")
+    return PyChain([Block("Genesis", 0)])
+
+
 st.markdown("# PyChain")
 st.markdown("## Store a Transaction Record in the PyChain")
+
+pychain = setup()
+    
     
     # Delete the `input_data` variable from the Streamlit interface.
 # Add input areas to capture values for `sender`, `receiver`, and `amount` from the user.
